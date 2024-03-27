@@ -1,3 +1,61 @@
+ <h1> A Rooks Move Game with Socket.IO </h1>
+  <p> </p>This is a simple chess game built using Node.js and Socket.IO for real-time communication between players. Players can join the game, move pieces on the board, and a timer is implemented to enforce time limits for each player's turn. </p>
+
+ <h2> Features </h2>
+   <ul> 
+       <li> Real-time multiplayer chess game </li>
+ <li>Player can join the game </li>
+<li> Move pieces on the chessboard </li>
+<li> Timer for each player's turn </li>
+<li> Winner detection when a player reaches the bottom-left corner of the board </li>
+   </ul>
+ <h2> Requirements </h2>
+ <li> Node.js installed on your machine </li>
+ <hr/>
+<h2> Installation </h2>
+ <p> 1. Clone this repository to your local machine: </p>
+<ul>
+<li> git clone <repository_url> </li>
+ <li> Navigate to the project directory: cd node-rook-move </li>
+<li> Install dependencies: npm install </li>
+<li> Start the server: npm atart </li>
+</ul>
+<hr/>
+About
+cuemath-assignment-kk.vercel.app
+Resources
+ Readme
+ Activity
+Stars
+ 0 stars
+Watchers
+ 1 watching
+Forks
+ 0 forks
+Report repository
+Releases
+No releases published
+Packages
+No packages published
+Deployments
+2
+ Production 14 minutes ago
+Languages
+JavaScript
+92.6%
+ 
+HTML
+7.4%
+Footer
+© 2024 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Docs
+Cont
+
 # json-ext
 
 [![NPM version](https://img.shields.io/npm/v/@discoveryjs/json-ext.svg)](https://www.npmjs.com/package/@discoveryjs/json-ext)
@@ -32,10 +90,6 @@ npm install @discoveryjs/json-ext
         - [continueOnCircular](#continueoncircular)
 - [version](#version)
 
-### parseChunked(chunkEmitter)
-
-Works the same as [`JSON.parse()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse) but takes `chunkEmitter` instead of string and returns [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
-
 > NOTE: `reviver` parameter is not supported yet, but will be added in next releases.
 > NOTE: WHATWG streams aren't supported yet
 
@@ -44,79 +98,6 @@ When to use:
 - Huge JSON needs to be parsed (e.g. >500MB on Node.js)
 - Needed to reduce memory pressure. `JSON.parse()` needs to receive the entire JSON before parsing it. With `parseChunked()` you may parse JSON as first bytes of it comes. This approach helps to avoid storing a huge string in the memory at a single time point and following GC.
 
-[Benchmark](https://github.com/discoveryjs/json-ext/tree/master/benchmarks#parse-chunked)
-
-Usage:
-
-```js
-const { parseChunked } = require('@discoveryjs/json-ext');
-
-// as a regular Promise
-parseChunked(chunkEmitter)
-    .then(data => {
-        /* data is parsed JSON */
-    });
-
-// using await (keep in mind that not every runtime has a support for top level await)
-const data = await parseChunked(chunkEmitter);
-```
-
-Parameter `chunkEmitter` can be:
-- [`ReadableStream`](https://nodejs.org/dist/latest-v14.x/docs/api/stream.html#stream_readable_streams) (Node.js only)
-```js
-const fs = require('fs');
-const { parseChunked } = require('@discoveryjs/json-ext');
-
-parseChunked(fs.createReadStream('path/to/file.json'))
-```
-- Generator, async generator or function that returns iterable (chunks). Chunk might be a `string`, `Uint8Array` or `Buffer` (Node.js only):
-```js
-const { parseChunked } = require('@discoveryjs/json-ext');
-const encoder = new TextEncoder();
-
-// generator
-parseChunked(function*() {
-    yield '{ "hello":';
-    yield Buffer.from(' "wor');    // Node.js only
-    yield encoder.encode('ld" }'); // returns Uint8Array(5) [ 108, 100, 34, 32, 125 ]
-});
-
-// async generator
-parseChunked(async function*() {
-    for await (const chunk of someAsyncSource) {
-        yield chunk;
-    }
-});
-
-// function that returns iterable
-parseChunked(() => ['{ "hello":', ' "world"}'])
-```
-
-Using with [fetch()](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API):
-
-```js
-async function loadData(url) {
-    const response = await fetch(url);
-    const reader = response.body.getReader();
-
-    return parseChunked(async function*() {
-        while (true) {
-            const { done, value } = await reader.read();
-
-            if (done) {
-                break;
-            }
-
-            yield value;
-        }
-    });
-}
-
-loadData('https://example.com/data.json')
-    .then(data => {
-        /* data is parsed JSON */
-    })
-```
 
 ### stringifyStream(value[, replacer[, space]])
 
@@ -137,99 +118,6 @@ When to use:
 
 [Benchmark](https://github.com/discoveryjs/json-ext/tree/master/benchmarks#stream-stringifying)
 
-Usage:
-
-```js
-const { stringifyStream } = require('@discoveryjs/json-ext');
-
-// handle events
-stringifyStream(data)
-    .on('data', chunk => console.log(chunk))
-    .on('error', error => consold.error(error))
-    .on('finish', () => console.log('DONE!'));
-
-// pipe into a stream
-stringifyStream(data)
-    .pipe(writableStream);
-```
-
-Using Promise or ReadableStream in serializing object:
-
-```js
-const fs = require('fs');
-const { stringifyStream } = require('@discoveryjs/json-ext');
-
-// output will be
-// {"name":"example","willSerializeResolvedValue":42,"fromFile":[1, 2, 3],"at":{"any":{"level":"promise!"}}}
-stringifyStream({
-    name: 'example',
-    willSerializeResolvedValue: Promise.resolve(42),
-    fromFile: fs.createReadStream('path/to/file.json'), // support file content is "[1, 2, 3]", it'll be inserted as it
-    at: {
-        any: {
-            level: new Promise(resolve => setTimeout(() => resolve('promise!'), 100))
-        }
-    }
-})
-
-// in case several async requests are used in object, it's prefered
-// to put fastest requests first, because in this case
-stringifyStream({
-    foo: fetch('http://example.com/request_takes_2s').then(req => req.json()),
-    bar: fetch('http://example.com/request_takes_5s').then(req => req.json())
-});
-```
-
-Using with [`WritableStream`](https://nodejs.org/dist/latest-v14.x/docs/api/stream.html#stream_writable_streams) (Node.js only):
-
-```js
-const fs = require('fs');
-const { stringifyStream } = require('@discoveryjs/json-ext');
-
-// pipe into a console
-stringifyStream(data)
-    .pipe(process.stdout);
-
-// pipe into a file
-stringifyStream(data)
-    .pipe(fs.createWriteStream('path/to/file.json'));
-
-// wrapping into a Promise
-new Promise((resolve, reject) => {
-    stringifyStream(data)
-        .on('error', reject)
-        .pipe(stream)
-        .on('error', reject)
-        .on('finish', resolve);
-});
-```
-
-### stringifyInfo(value[, replacer[, space[, options]]])
-
-`value`, `replacer` and `space` arguments are the same as for `JSON.stringify()`.
-
-Result is an object:
-
-```js
-{
-    minLength: Number,  // minimal bytes when values is stringified
-    circular: [...],    // list of circular references
-    duplicate: [...],   // list of objects that occur more than once
-    async: [...]        // list of async values, i.e. promises and streams
-}
-```
-
-Example:
-
-```js
-const { stringifyInfo } = require('@discoveryjs/json-ext');
-
-console.log(
-    stringifyInfo({ test: true }).minLength
-);
-// > 13
-// that equals '{"test":true}'.length
-```
 
 #### Options
 
